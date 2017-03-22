@@ -21,9 +21,10 @@ PROTOTYPES: DISABLE
 AV *
 flatten(...)
 CODE:
+    // my @args = @_ > 1 ? @_ : @{$_[0]};
     AV *args;
     if (items > 1) {
-        args = (AV*)sv_2mortal((SV*)newAV());
+        args = newAV();
         for (I32 i = 0; i < items; i++)
             av_push(args, newSVsv(ST(i)));
     } else {
@@ -35,7 +36,7 @@ CODE:
     SV *val;
     I32 len;
     AV *ary;
-    AV *result = (AV*)sv_2mortal((SV*)newAV());
+    AV *result = newAV();
 
     while(av_len(args) + 1) {
         val = av_shift(args);

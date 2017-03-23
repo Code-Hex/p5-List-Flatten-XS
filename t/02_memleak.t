@@ -12,8 +12,14 @@ my $pattern = +[
 
 no_leaks_ok {
     for my $try (@$pattern) {
+        flatten(@$try);
+    }
+} 'Detected memory leak via flatten(@)';
+
+no_leaks_ok {
+    for my $try (@$pattern) {
         flatten($try);
     }
-} 'memory leak';
+} 'Detected memory leak via flatten()';
 
 done_testing;

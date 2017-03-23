@@ -7,6 +7,7 @@ our $VERSION = '0.01';
 use XSLoader;
 XSLoader::load(__PACKAGE__, $VERSION);
 
+require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT_OK = qw/flatten/;
 

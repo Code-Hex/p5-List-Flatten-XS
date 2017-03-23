@@ -28,6 +28,7 @@ cover_db/
 
 MYMETA.*
 .vstags
+.carmel
 /List-Flatten-XS-*
 lib/List/Flatten/XS.c
 !lib/List/Flatten/ppport.h

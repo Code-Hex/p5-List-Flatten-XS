@@ -1,12 +1,14 @@
 package List::Flatten::XS;
-use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = "0.01";
+our $VERSION = '0.01';
 
 use XSLoader;
 XSLoader::load(__PACKAGE__, $VERSION);
+
+our @ISA = qw/Exporter/;
+our @EXPORT_OK = qw/flatten/;
 
 1;
 __END__

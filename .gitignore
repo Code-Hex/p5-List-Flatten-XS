@@ -29,6 +29,7 @@ cover_db/
 MYMETA.*
 .vstags
 .carmel
+benchmark.pl
 /List-Flatten-XS-*
 lib/List/Flatten/XS.c
 !lib/List/Flatten/ppport.h

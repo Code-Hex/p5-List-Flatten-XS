@@ -15,15 +15,24 @@ my $pattern = +[
 
 
 for my $try (@$pattern) {
+    my @got = flatten($try);
+    is_deeply(\@got, $expected, 'Passed array ref, compare with array');
+}
+
+for my $try (@$pattern) {
+    my @got = flatten(@$try);
+    is_deeply(\@got, $expected, 'Passed array, compare with array');
+}
+
+for my $try (@$pattern) {
     my $got = flatten($try);
-    is_deeply($got, $expected, 'Passed array ref');
+    is_deeply($got, $expected, 'Passed array ref, compare with arrayref');
 }
 
 for my $try (@$pattern) {
     my $got = flatten(@$try);
-    is_deeply($got, $expected, 'Passed array');
+    is_deeply($got, $expected, 'Passed array, compare with arrayref');
 }
-
 
 done_testing;
 

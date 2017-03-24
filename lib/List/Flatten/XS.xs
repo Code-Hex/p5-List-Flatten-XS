@@ -19,62 +19,43 @@ MODULE = List::Flatten::XS    PACKAGE = List::Flatten::XS
 PROTOTYPES: ENABLE
 
 void *
-flatten(...)
+_flatten(...)
 PROTOTYPE: @
 PPCODE:
 {
-    // my @args = @_ > 1 ? @_ : @{$_[0]};
-    I32 i;
-    AV *args = newAV();
-    sv_2mortal((SV*)args);
-    SV **argv = &PL_stack_base[ax];
-    
-    if (!items) croak("Please give me arguments");
+    if (!items) XSRETURN_EMPTY;
 
-    if (items > 1) {
-        for (i = 0; i < items; i++)
-            av_push(args, argv[i]);
-    } else {
-        if (!SvROK( argv[0] )) croak("ref(array) expected");
-        AV *deref = (AV *)SvRV( argv[0] );
-        for (i = 0; i < av_len(deref) + 1; i++) {
-            SV **fetch = av_fetch(deref, i, FALSE);
-            if (!fetch) croak("deref[%d] is null", i);
-            av_push(args, *fetch);
-        }
-    }
+    I32 i;
+    SV **argv = &PL_stack_base[ax];
+    AV *args = (AV *)sv_2mortal( (SV *)newAV() );
+
+    for (i = 0; i < items; i++)
+        av_push(args, argv[i]);
     
-    SV *val;
     I32 len;
-    AV *ary;
+    SV *val;
     AV *result = newAV();
 
     while (av_len(args) + 1) {
         val = av_shift(args);
         if (SvROK(val) && SvTYPE(SvRV(val)) == SVt_PVAV) {
-            ary = (AV *)SvRV(val);
+            AV *ary = (AV *)SvRV(val); // dereference
             len = av_len(ary) + 1;
             av_unshift(args, len);
-            for (i = 0; i < len; i++) {
-                SV **fetch = av_fetch(ary, i, FALSE);
-                if (!fetch) croak("ary[%d] is null", i);
-                av_store(args, i, *fetch);
-            }
+            for (i = 0; i < len; i++)
+                av_store(args, i, *av_fetch(ary, i, FALSE));
         } else {
             av_push(result, val);
         }
     }
-
+    
     if (GIMME_V == G_ARRAY) {
         len = av_len(result) + 1;
-        for (i = 0; i < len; i++) {
-            SV **fetch = av_fetch(result, i, FALSE);
-            if (!fetch) croak("result[%d] is null", i);
-            ST(i) = *fetch;
-        }
+        for (i = 0; i < len; i++)
+            ST(i) = *av_fetch(result, i, FALSE);
         XSRETURN(len);
-    } else {
-        ST(0) = sv_2mortal( newRV_inc((SV*)result) );
-        XSRETURN(1);
     }
+
+    ST(0) = sv_2mortal( newRV_inc((SV*)result) );
+    XSRETURN(1);
 }

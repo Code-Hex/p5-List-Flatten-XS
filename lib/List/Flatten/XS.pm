@@ -11,6 +11,8 @@ require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT_OK = qw/flatten/;
 
+sub flatten { _flatten(@_ > 1 ? @_ : @{$_[0]}) }
+
 1;
 __END__
 

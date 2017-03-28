@@ -3,7 +3,7 @@ use Test::LeakTrace;
 use List::Flatten::XS 'flatten';
 
 my $pattern = +[
-    [1,2,3],
+    [1,[2,3]],
 ];
 
 for my $try (@$pattern) {

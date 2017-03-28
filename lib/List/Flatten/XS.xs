@@ -14,30 +14,11 @@ extern "C" {
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
-MODULE = List::Flatten::XS    PACKAGE = List::Flatten::XS
-
-PROTOTYPES: ENABLE
-
-void *
-flatten(...)
-PROTOTYPE: $;$
-PPCODE:
+static AV *
+_fast_flatten(SV *ref)
 {
-    I32 i, level;
-    SV *ref;
-    SV **argv = &PL_stack_base[ax];
-
-    if (!items) XSRETURN_EMPTY;
-
-    ref = sv_mortalcopy(argv[0]);
-    if (!SvROK(ref) || SvTYPE(SvRV(ref)) != SVt_PVAV)
-        croak("Please pass an array reference to the first argument");
-    
-    AV *args = (AV *)SvRV(ref);
-    if (items == 2)
-        level = (I32)SvIV(argv[1]);
-    
-    I32 len;
+    I32 i, len;
+    AV *args = (AV *)SvRV( ref );
     AV *result = (AV *)sv_2mortal((SV *)newAV());
 
     while (av_len(args) + 1) {
@@ -52,25 +33,32 @@ PPCODE:
             av_push(result, tmp);
         }
     }
-
-    ST(0) = sv_2mortal( newRV_inc((SV *)result) );
-    XSRETURN(1);
+    return result;
 }
 
-/*
-sub flat {
-    my $list = shift;
-    my $level = shift // -1;
-    my @args = @{$list};
-    my @result;
-    while (@args) {
-        my $a = shift @args;
-        if (ref $a eq 'ARRAY') {
-            unshift @args, @{$a};
-        } else {
-            push @result, $a;
-        }
+MODULE = List::Flatten::XS    PACKAGE = List::Flatten::XS
+PROTOTYPES: DISABLE
+
+void *
+flatten(ref, svlevel = sv_2mortal(newSViv(-1)))
+    SV *ref;
+    SV *svlevel;
+PPCODE:
+{
+    if (!SvROK(ref) || SvTYPE(SvRV(ref)) != SVt_PVAV)
+        croak("Please pass an array reference to the first argument");
+    
+    I32 level = SvIV(svlevel);
+    AV *result;
+    if (level < 0)
+       result = _fast_flatten( sv_mortalcopy(ref) );
+
+    if (GIMME_V == G_ARRAY) {
+        I32 len = av_len(result) + 1;
+        for (I32 i = 0; i < len; i++)
+            XPUSHs( *av_fetch(result, i, FALSE) );
+    } else {
+        XPUSHs( sv_2mortal( newRV_inc((SV *)result) ) );
     }
-    return @result;
+    PUTBACK;
 }
-*/

@@ -11,6 +11,24 @@ require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT_OK = qw/flatten/;
 
+=s
+sub flatten {
+    my $list = shift;
+    my $level = shift // -1;
+    my @args = @{$list};
+    my @result;
+    while (@args) {
+        my $a = shift @args;
+        if (ref $a eq 'ARRAY') {
+            unshift @args, @{$a};
+        } else {
+            push @result, $a;
+        }
+    }
+    return wantarray ? @result : \@result;
+}
+=cut
+
 1;
 __END__
 

@@ -14,21 +14,47 @@ extern "C" {
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
+#define AV_PUSH(dest, val)              \
+({                                      \
+    if (SvROK(val)) av_push(dest, val); \
+    else av_push(dest, newSVsv(val));   \
+})
+
+#define AV_UNSHIFT_ARRAYREF(dest, src)          \
+({                                              \
+    AV *ary = (AV *)SvRV(src);                  \
+    I32 l = av_len(ary) + 1;                    \
+    av_unshift(dest, l);                        \
+    SV *val;                                    \
+    for (I32 i = 0; i < l; i++) {               \
+        val = *av_fetch(ary, i, FALSE);         \
+        if (SvROK(val)) av_store(dest, i, val); \
+        else av_store(dest, i, newSVsv(val));   \
+    }                                           \
+})
+
 static AV *
 _fast_flatten(SV *ref)
 {
-    I32 i, len;
     AV *args = (AV *)SvRV( ref );
+    AV *dest = (AV *)sv_2mortal((SV *)newAV());
+
+    I32 len = av_len(args) + 1;
+    for (I32 i = 0; i < len; i++) {
+        SV *val = *av_fetch(args, i, FALSE);
+        if (val != NULL) {
+            AV_PUSH(dest, val);
+        } else {
+            croak("Could not fetch $_[0]->[%d]", i);
+        }
+    }
+
     AV *result = (AV *)sv_2mortal((SV *)newAV());
 
-    while (av_len(args) + 1) {
-        SV *tmp = av_shift(args);
+    while (av_len(dest) + 1) {
+        SV *tmp = av_shift(dest);
         if (SvROK(tmp) && SvTYPE(SvRV(tmp)) == SVt_PVAV) {
-            AV *ary = (AV *)SvRV(tmp);
-            len = av_len(ary) + 1;
-            av_unshift(args, len);
-            for (i = 0; i < len; i++)
-                av_store(args, i, *av_fetch(ary, i, FALSE));
+            AV_UNSHIFT_ARRAYREF(dest, tmp);
         } else {
             av_push(result, tmp);
         }
@@ -51,7 +77,7 @@ PPCODE:
     I32 level = SvIV(svlevel);
     AV *result;
     if (level < 0)
-       result = _fast_flatten( sv_mortalcopy(ref) );
+       result = _fast_flatten( ref );
 
     if (GIMME_V == G_ARRAY) {
         I32 len = av_len(result) + 1;

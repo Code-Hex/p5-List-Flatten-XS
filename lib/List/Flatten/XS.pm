@@ -14,7 +14,6 @@ our @EXPORT_OK = qw/flatten/;
 =s
 sub flatten {
     my $list = shift;
-    my $level = shift // -1;
     my @args = @{$list};
     my @result;
     while (@args) {

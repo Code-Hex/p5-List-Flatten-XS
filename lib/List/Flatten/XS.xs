@@ -14,38 +14,38 @@ extern "C" {
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
-#define AV_PUSH(dest, val)              \
-({                                      \
-    if (SvROK(val)) av_push(dest, val); \
-    else av_push(dest, newSVsv(val));   \
+#define AV_PUSH(dest, val)                                           \
+    av_push(dest, SvROK(val) ? SvREFCNT_inc(sv_2mortal(val)) : val)  \
+
+
+#define AV_UNSHIFT_ARRAYREF(dest, src)                        \
+({                                                            \
+    AV *ary = (AV *)SvRV(src);                                \
+    IV l = av_len(ary) + 1;                                   \
+    av_unshift(dest, l);                                      \
+    SV *val;                                                  \
+    for (IV i = 0; i < l; i++) {                              \
+        val = *av_fetch(ary, i, FALSE);                       \
+        if (SvROK(val))                                       \
+            av_store(dest, i, SvREFCNT_inc(sv_2mortal(val))); \
+        else                                                  \
+            av_store(dest, i, val);                           \
+    }                                                         \
 })
 
-#define AV_UNSHIFT_ARRAYREF(dest, src)          \
-({                                              \
-    AV *ary = (AV *)SvRV(src);                  \
-    I32 l = av_len(ary) + 1;                    \
-    av_unshift(dest, l);                        \
-    SV *val;                                    \
-    for (I32 i = 0; i < l; i++) {               \
-        val = *av_fetch(ary, i, FALSE);         \
-        if (SvROK(val)) av_store(dest, i, val); \
-        else av_store(dest, i, newSVsv(val));   \
-    }                                           \
-})
-
-static AV *
+static SV *
 _fast_flatten(SV *ref)
 {
-    AV *args = (AV *)SvRV( ref );
+    AV *args = (AV *)SvRV(ref);
     AV *dest = (AV *)sv_2mortal((SV *)newAV());
 
-    I32 len = av_len(args) + 1;
-    for (I32 i = 0; i < len; i++) {
+    IV len = av_len(args) + 1;
+    for (IV i = 0; i < len; i++) {
         SV *val = *av_fetch(args, i, FALSE);
         if (val != NULL) {
             AV_PUSH(dest, val);
         } else {
-            croak("Could not fetch $_[0]->[%d]", i);
+            croak("Could not fetch $_[0]->[%ld]", i);
         }
     }
 
@@ -56,10 +56,50 @@ _fast_flatten(SV *ref)
         if (SvROK(tmp) && SvTYPE(SvRV(tmp)) == SVt_PVAV) {
             AV_UNSHIFT_ARRAYREF(dest, tmp);
         } else {
-            av_push(result, tmp);
+            AV_PUSH(result, tmp);
         }
     }
-    return result;
+    return newRV_inc((SV*)result);
+}
+
+static SV *
+_flatten_per_level(SV *ref, IV level)
+{
+    AV *stack = (AV *)sv_2mortal((SV *)newAV());
+    AV *result = (AV *)sv_2mortal((SV *)newAV());
+
+    IV i = 0;
+    SV *tmp;
+    AV *ary = (AV *)SvRV(ref);
+    while (1) {
+        while (i < av_len(ary) + 1) {
+            if ((tmp = *av_fetch(ary, i++, FALSE)) == NULL)
+                croak("Could not fetch ary->[%ld]", i - 1);
+
+            if (level >= 0 && (av_len(stack) + 1) / 2 >= level) {
+                AV_PUSH(result, tmp);
+                continue;
+            }
+
+            if (SvROK(tmp) && SvTYPE(SvRV(tmp)) == SVt_PVAV) {
+                AV_PUSH(stack, (SV *)ary);
+                AV_PUSH(stack, sv_2mortal(newSViv(i)));
+                ary = (AV *)SvRV(tmp);
+                i = 0;
+            } else {
+                AV_PUSH(result, tmp);
+            }
+        }
+
+        if (av_len(stack) + 1 == 0) break;
+        
+        SV *idx = av_pop(stack);
+        i = SvIV(idx);
+        SV *poped = av_pop(stack);
+        ary = (AV *)poped; // Already done SvRV(SV *)
+    }
+
+    return newRV_inc((SV*)result);
 }
 
 MODULE = List::Flatten::XS    PACKAGE = List::Flatten::XS
@@ -74,17 +114,17 @@ PPCODE:
     if (!SvROK(ref) || SvTYPE(SvRV(ref)) != SVt_PVAV)
         croak("Please pass an array reference to the first argument");
     
-    I32 level = SvIV(svlevel);
-    AV *result;
-    if (level < 0)
-       result = _fast_flatten( ref );
+    IV level = SvIV(svlevel);
+    SV *result = (level < 0) ? _fast_flatten(ref)
+                    : _flatten_per_level(ref, level);
 
     if (GIMME_V == G_ARRAY) {
-        I32 len = av_len(result) + 1;
-        for (I32 i = 0; i < len; i++)
-            XPUSHs( *av_fetch(result, i, FALSE) );
+        AV *av_result = (AV *)SvRV(result);
+        IV len = av_len(av_result) + 1;
+        for (IV i = 0; i < len; i++)
+            XPUSHs( *av_fetch(av_result, i, FALSE) );
     } else {
-        XPUSHs( sv_2mortal( newRV_inc((SV *)result) ) );
+        XPUSHs(result);
     }
     PUTBACK;
 }

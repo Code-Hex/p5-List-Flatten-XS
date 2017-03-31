@@ -1,5 +1,5 @@
 name = "List-Flatten-XS"
-# badges = ["travis"]
+badges = ["travis"]
 authority="cpan:CODEHEX"
 
 module_maker="ModuleBuildTiny"

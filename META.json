@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "L<List::Flatten> with XS",
    "author" : [
       "K <x00.x7f@gmail.com>"
    ],
@@ -67,5 +67,6 @@
    },
    "version" : "0.01",
    "x_authority" : "cpan:CODEHEX",
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   "x_serialization_backend" : "JSON::PP version 2.27300",
+   "x_static_install" : 1
 }

@@ -2,7 +2,13 @@ name = "List-Flatten-XS"
 badges = ["travis"]
 authority="cpan:CODEHEX"
 
-module_maker="ModuleBuildTiny"
+module_maker="ModuleBuild"
+
+[build]
+build_class = "Module::Build::XSUtil"
 
 [Metadata]
 x_static_install = 1
+
+[XSUtil]
+needs_compiler_c99 = 1

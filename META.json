@@ -66,8 +66,7 @@
          "web" : "https://github.com/Code-Hex/List-Flatten-XS"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_authority" : "cpan:CODEHEX",
-   "x_serialization_backend" : "JSON::PP version 2.27300",
-   "x_static_install" : 1
+   "x_serialization_backend" : "JSON::PP version 2.27300"
 }

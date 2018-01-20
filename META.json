@@ -4,7 +4,7 @@
       "K <x00.x7f@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.0.9, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Minilla/v3.0.11, CPAN::Meta::Converter version 2.150005",
    "license" : [
       "perl_5"
    ],
@@ -66,7 +66,11 @@
          "web" : "https://github.com/Code-Hex/List-Flatten-XS"
       }
    },
-   "version" : "0.02",
+   "version" : "0.03",
    "x_authority" : "cpan:CODEHEX",
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   "x_contributors" : [
+      "Shoichi Kaji <skaji@cpan.org>",
+      "K <Code-Hex@users.noreply.github.com>"
+   ],
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
 }

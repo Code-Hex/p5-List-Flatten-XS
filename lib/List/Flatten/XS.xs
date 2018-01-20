@@ -14,7 +14,7 @@ extern "C" {
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
-#define IS_ARRAYREF(sv) SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVAV
+#define IS_ARRAYREF(sv) SvROK(sv) && SvTYPE(SvRV(sv)) == SVt_PVAV && !SvOBJECT(SvRV(sv))
 #define AV_FETCH_MUST(ary, idx) *av_fetch(ary, idx, FALSE)
 
 #define AV_PUSH_INC(dest, val)           \

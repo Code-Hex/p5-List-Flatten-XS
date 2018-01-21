@@ -2,6 +2,10 @@ Revision history for Perl extension List-Flatten-XS
 
 {{$NEXT}}
 
+0.05 2018-01-21T09:17:41Z
+
+    - Added function to throw exception using croak instead of into infinity loop when passed circular reference
+
 0.04 2018-01-21T06:43:26Z
 
     - Supported to compile on thread perl

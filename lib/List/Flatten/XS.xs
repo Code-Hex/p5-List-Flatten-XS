@@ -33,7 +33,7 @@ extern "C" {
 })
 
 static SV *
-_fast_flatten(SV *ref)
+_fast_flatten(pTHX_ SV *ref)
 {
     AV *args = (AV *)SvRV(ref);
     AV *dest = (AV *)sv_2mortal((SV *)newAV());
@@ -57,7 +57,7 @@ _fast_flatten(SV *ref)
 }
 
 static SV *
-_flatten_per_level(SV *ref, IV level)
+_flatten_per_level(pTHX_ SV *ref, IV level)
 {
     AV *stack = (AV *)sv_2mortal((SV *)newAV());
     AV *result = (AV *)sv_2mortal((SV *)newAV());
@@ -107,8 +107,8 @@ PPCODE:
         croak("Please pass an array reference to the first argument");
     
     IV level = SvIV(svlevel);
-    SV *result = (level < 0) ? _fast_flatten(ref)
-                    : _flatten_per_level(ref, level);
+    SV *result = (level < 0) ? _fast_flatten(aTHX_ ref)
+                    : _flatten_per_level(aTHX_ ref, level);
 
     if (GIMME_V == G_ARRAY) {
         AV *av_result = (AV *)SvRV(result);

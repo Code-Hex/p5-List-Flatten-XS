@@ -123,7 +123,7 @@ flatten(ref, svlevel = sv_2mortal(newSViv(-1)))
 PPCODE:
 {
     if (!SvROK(ref) || SvTYPE(SvRV(ref)) != SVt_PVAV)
-        Perl_croak("Please pass an array reference to the first argument");
+        Perl_croak(aTHX_ "Please pass an array reference to the first argument");
     
     IV level = SvIV(svlevel);
     SV *result = (level < 0) ? _fast_flatten(aTHX_ ref)

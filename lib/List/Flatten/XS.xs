@@ -44,9 +44,17 @@ _fast_flatten(pTHX_ SV *ref)
 
     AV *result = (AV *)sv_2mortal((SV *)newAV());
 
+    // This is to detect circular reference
+    HV *memo = (HV *)sv_2mortal((SV *)newHV());
+
     while (av_len(dest) + 1) {
         SV *tmp = av_shift(dest);
+        if (hv_exists_ent(memo, tmp, 0)) {
+            Perl_croak(aTHX_ "tried to flatten recursive list(circular references)");
+        }
         if (IS_ARRAYREF(tmp)) {
+            // store the pointer of array reference
+            hv_store_ent(memo, tmp, &PL_sv_undef,  0);
             AV_UNSHIFT_ARRAYREF(dest, tmp);
         } else {
             AV_PUSH_INC(result, tmp);
@@ -62,6 +70,9 @@ _flatten_per_level(pTHX_ SV *ref, IV level)
     AV *stack = (AV *)sv_2mortal((SV *)newAV());
     AV *result = (AV *)sv_2mortal((SV *)newAV());
 
+    // This is to detect circular reference
+    HV *memo = (HV *)sv_2mortal((SV *)newHV());
+
     IV i = 0;
     SV *tmp;
     AV *ary = (AV *)SvRV(ref);
@@ -74,6 +85,14 @@ _flatten_per_level(pTHX_ SV *ref, IV level)
             }
 
             if (IS_ARRAYREF(tmp)) {
+                if (hv_exists_ent(memo, tmp, 0)) {
+                    SvREFCNT_inc(stack);
+                    Perl_croak(aTHX_ "tried to flatten recursive list(circular references)");
+                }
+                // store the pointer of array reference
+                hv_store_ent(memo, tmp, &PL_sv_undef, 0);
+
+                // push value to the stack
                 av_push(stack, (SV *)ary);
                 av_push(stack, sv_2mortal(newSViv(i)));
                 ary = (AV *)SvRV(tmp);
@@ -104,7 +123,7 @@ flatten(ref, svlevel = sv_2mortal(newSViv(-1)))
 PPCODE:
 {
     if (!SvROK(ref) || SvTYPE(SvRV(ref)) != SVt_PVAV)
-        croak("Please pass an array reference to the first argument");
+        Perl_croak("Please pass an array reference to the first argument");
     
     IV level = SvIV(svlevel);
     SV *result = (level < 0) ? _fast_flatten(aTHX_ ref)

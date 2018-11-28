@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Code-Hex/List-Flatten-XS.svg?branch=master)](https://travis-ci.org/Code-Hex/List-Flatten-XS)
+[![Build Status](https://travis-ci.org/Code-Hex/p5-List-Flatten-XS.svg?branch=master)](https://travis-ci.org/Code-Hex/p5-List-Flatten-XS)
 # NAME
 
 List::Flatten::XS - [List::Flatten](https://metacpan.org/pod/List::Flatten) with XS

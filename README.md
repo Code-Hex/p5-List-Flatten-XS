@@ -39,4 +39,4 @@ it under the same terms as Perl itself.
 
 # AUTHOR
 
-K <x00.x7f@gmail.com>
+K <perl@codehex.dev>

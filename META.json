@@ -1,7 +1,7 @@
 {
    "abstract" : "L<List::Flatten> with XS",
    "author" : [
-      "K <x00.x7f@gmail.com>"
+      "K <perl@codehex.dev>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Minilla/v3.1.29, CPAN::Meta::Converter version 2.150013",
